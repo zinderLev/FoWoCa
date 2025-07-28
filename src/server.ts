@@ -1,7 +1,7 @@
 import Fastify from 'fastify';
 import path from 'path';
 import fastifyStatic from '@fastify/static';
-import { ensureUsersDirectoryExists, userFileExists, createUserFile, UserData } from './scripts/tools'; // Импортируем функции и интерфейс
+import { ensureUsersDirectoryExists, userFileExists, IPostErr, IPostData, postAnswers } from './scripts/serverTools'; // Импортируем функции и интерфейс
 
 const fastify = Fastify({
   logger: true // Включаем логирование
@@ -13,10 +13,9 @@ fastify.register(fastifyStatic, {
   prefix: '/', // Файлы из public/ будут доступны по корневому URL
 });
 
-// Интерфейс для тела POST-запроса регистрации
-interface RegisterRequestBody {
-  username: string;
-  password: string;
+interface IApiStruct{
+  command:string;
+  data:IPostData;
 }
 
 // Маршрут для отдачи главной HTML-страницы
@@ -26,32 +25,14 @@ fastify.get('/', async (request, reply) => {
 });
 
 // Маршрут для обработки POST-запроса регистрации пользователя
-fastify.post<{ Body: RegisterRequestBody }>('/register', async (request, reply) => {
-  const { username, password } = request.body;
-
-  if (!username || !password) {
-    reply.status(400).send({ message: 'Username and password are required.' });
-    return;
-  }
-
-  // Санитизация имени пользователя для имени файла (удаляем недопустимые символы)
-  const safeUsername = username.replace(/[^a-zA-Z0-9-_.]/g, '_');
-
+fastify.post<{ Body: IApiStruct }>('/api', async (request, reply) => {
   try {
-    // Проверяем, существует ли пользователь с таким именем
-    const exists = await userFileExists(safeUsername);
-
-    if (exists) {
-      reply.status(409).send({ message: `User '${username}' already exists.` }); // 409 Conflict
-    } else {
-      // Создаем нового пользователя
-      const userData: UserData = { username: safeUsername, password: password };
-      await createUserFile(userData);
-      reply.status(201).send({ message: `User '${username}' registered successfully!` }); // 201 Created
-    }
+    const oPostReq = await postAnswers(request.body.command, request.body.data);
+    reply.status(200).send(oPostReq);
   } catch (error) {
-    fastify.log.error('Error during user registration:', error);
-    reply.status(500).send({ message: 'Internal server error during registration.' });
+    const oErr = error as IPostErr;
+    fastify.log.error(oErr.message, oErr.cod);
+    reply.status(200).send({ error: oErr.message });
   }
 });
 

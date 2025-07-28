@@ -1,28 +1,221 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FoWoCa - Регистрация пользователя</title>
-    <link rel="stylesheet" href="/style.css">
-</head>
-<body>
-    <div class="container">
-        <h1>Добро пожаловать в FoWoCa!</h1>
-        <p>Пожалуйста, зарегистрируйтесь, чтобы продолжить.</p>
-
-        <form id="registrationForm">
-            <label for="username">Имя пользователя:</label>
-            <input type="text" id="username" name="username" required>
-
-            <label for="password">Пароль:</label>
-            <input type="password" id="password" name="password" required>
-
-            <button type="submit">Зарегистрироваться</button>
-        </form>
+<html>
+  <head>
+    <title>Foreign word cards</title>
+    <link id="cssLink" rel="stylesheet" href="/style.css" />
+    <meta charset="utf-8" />
+    <!--script type="text/javascript" src="FWCfunc.js"></script>
+    <script type="text/javascript" src="myTools.js"></script-->
+    <script type="text/javascript" src="scripts/clientTools.js"></script>
+  </head>
+  <body>
+    <div id="getAttr" style="display: none"></div>
+    <div  onclick="ChangeUser()" id="ChangeUser">
+        <label id="user">User: Stranger</label>
+    </div>
+    <div class="alarmWindow" id="waitingBox"></div>
+    <div id="SignInBlock" style="display: none">
+        <label>E-mail</label><br />
+        <input class="signing" type="email" id="login" /><br />
+        <label>Password</label><br />
+        <input class="signing" type="password" id="password" />
+        <span class="signing" id="showTextPassword" onclick="showText('password', this.id)">&#128374;</span>
+        <br>
+        <div id="repPassDiv" style="display: none">
+            <label>Repeat password</label><br />
+            <input class="signing" type="password" id="repPassword" />
+            <span class="signing" id="showTextRepPass" onclick="showText('repPassword', this.id)"
+            >&#128374;</span><br />
+        </div>
+        <br />
+        <div id="loginButton">
+            <input class="button1" type="button" value="Sign in" onclick="signIn()" />
+            <input class="button1" type="button" value="Sign up" onclick="signUp()" title="Registration new user"/>
+            <input class="button1" type="button" value="Cancel" onclick="ContinueWithoutAuthorization()"/>
+        </div>
+        <div id="logoutButton" style="display:none">
+            <!--input class="button1" type="button" value="Reset password" />< onclick="signUp()" /-->
+            <input class="button1" type="button" value="Logout" onclick="logout()" />
+            <input class="button1" type="button" value="Change user" onclick="signIn()" />
+            <input class="button1" type="button" value="Sign up" onclick="signUp()" title="Registration new user"/>
+            <input class="button1" type="button" value="Cancel" onclick="ContinueWithoutAuthorization()"/>
+        </div>
+    </div>
+    <div id="wordCardsBlock" style="display:none">
+        <div id="fromServer" style="display: none">{{ greeting }}</div>
+        <div class="buttonBlok2">      
+            <div class="radio" onclick="setRnd()">
+            <div id="Rnd" class="button2" onclick="setRnd()"></div>
+            <div class="radioText">Random</div>
+            </div>
+            <div class="radio" onclick="setEn()">
+            <div id="En" class="button2" onclick="setEn()"></div>
+            <div class="radioText">Foreign</div>
+            </div>
+            <div class="radio" onclick="setRu()">
+            <div id="Ru" class="button2" onclick="setRu()"></div>
+            <div class="radioText">Native</div>
+            </div>
+        </div>
+        <div class="buttonBlok2">
+            <div class="radio" onclick="resetRem()">
+            <div id="All" class="button2" onclick="resetRem()"></div>
+            <div class="radioText">All  words&nbsp;&nbsp;</div>
+            </div>
+            <div class="radio" onclick="setRem()">
+            <div id="Unrem" class="button2" type="button" value=""  onclick="setRem()"></div>
+            <div class="radioText">Unlearned&nbsp;&nbsp;</div>
+            </div>
+        </div>
+        <div id="out" class="words">&nbsp;</div>
+        <div id="ans" class="info">&nbsp;</div>
+        <div class="buttonBlok">
+            <input type="button" class="button1" value="&#9664;&nbsp;Prev&nbsp;&nbsp;" onclick="outputPrevWord()" />
+            <input type="button" class="button1" value="&nbsp;&nbsp;Rand&nbsp;&nbsp;" onclick="outputRandWord()" />
+            <input type="button" class="button1" value="&nbsp;&nbsp;Next&nbsp;&#9654;" onclick="outputNextWord()" />
+        </div>
+        <hr>
+        <div class="buttonBlok">
+            <input type="button" class="button1" value="Memorized"  onclick="wordRemembered()" />
+            <input type="button" class="button1" value="Forgot"     onclick="wordForgot()" />
+        </div>
+        <hr>
+        <div class="buttonBlok">
+            <input type="button" class="button1" value="Variants" onclick="outputVariants()" />
+            <input type="button" class="button1" value="By characters" onclick="outputWordByChar()"/>
+            <input type="button" class="button1" value="Right answer"  onclick="outputRightAnswer()"/>
+        </div>
+        <hr>
+        <div class="buttonBlok">
+            <input type="button" class="button1" value="Load/Change dictionary"  onclick="ChangeDictionary()"/>
+        </div>
+    </div>
+    <!--br /-->
+    <div id="DictManipulation" style="display:none">
+        <div class="buttonBlok" id="DictManipulationButtons">
+            <input class="button1" type="button" value="Load new dictionary" onclick="LoadNewDictionary()"/>
+            <input class="button1" type="button" value="Change current dictionary" onclick="ChangeCurrDict()"/>
+            <!--input class="button1" type="button" value="Add words to dictionary" onclick="AddWordsToDictionary()"/-->
+            <input class="button1" type="button" value="Cancel" onclick="CancelDictManipulation()" />        
+        </div>
+        <div id="DictLoad" style="display:none">
+            <div>
+            <label>Dictionary name:&nbsp;</label><input class="signing" type="text" id="dictName"/>
+            <input class="button1" type="button" value="Load dictionary" onclick="BeforeLoadDict()"/>
+            <input class="button1" type="button" value="Cancel" onclick="CancelLoad()" />        
+            </div>
+            <textarea id="dictBody" style="width: 100%" rows="20"></textarea>
+            <!-- cols="60" rows="20" style="float: right;"-->
+        </div>
+        <div id="DictArr" style="display:none; text-align:centre;">
+        </div>
+        <div id="AddWords" style="display:none">
+            <div>Choice of dictionary
+            <div style="border:solid;">
+                abc
+            </div>
+            <input class="button1" type="button" value="Load words" onclick="opebBlock('DictLoad')"/>
+            <input class="button1" type="button" value="Cancel" onclick="CancelLoad()" />        
+            </div>
+            <textarea id="dictionary" style="width: 100%" rows="20"></textarea>
+            <!-- cols="60" rows="20" style="float: right;"-->
+        </div>
     </div>
 
-    <!-- Клиентский скрипт будет скомпилирован в dist/clientTools.js и доступен по /clientTools.js -->
-    <script src="/clientTools.js"></script>
-</body>
+    <div id="cookieWarning" class="cookie_notice">
+        This site uses cookies to make your next input easier<br/>
+        <input class="button1" type="button" value="I agree" onclick="iAgreeCookie()"
+        style="box-shadow:5px 5px 6px rgba(0, 0, 0, 5);"/>
+    </div>
+    <!------------------------------------------------------------>
+    <!--script>
+      hideBlock('waitingBox');
+      const width = window.screen.width
+      const height = window.screen.height;
+      const isMobile = width < height;
+      window["getAttr"] = document.getElementById("getAttr").innerText;
+      if(!window.getAttr) window.getAttr = "";
+      window["dictArr"] = [];
+      window["currDict"] = "";
+            
+      if(isMobile){
+        document.getElementById("cssLink").href="/mobStyle.css"
+      }
+      if(getCookie("cookieAgree")){
+        hideBlock('cookieWarning');
+      }
+      window["currUser"]  = getCookie("user");
+      //-------------------------------------
+      if (window.currUser && window.currUser != "Stranger") {
+        let currPass = getCookie("pass");
+        if (!currPass) currAbc = "";
+        let str = JSON.stringify({ log: window.currUser, pass: currPass, exDict:window.getAttr});
+        setData("signIn", str);
+        waiting();
+      } else if(window.getAttr != ""){
+        setData("loadExDict", JSON.stringify({exDict:window.getAttr}));
+        waiting();
+      } else {
+        openBlock("SignInBlock");
+      }
+    
+      function LoadNewDictionary(){
+        hideBlock('DictManipulationButtons');
+        openBlock('DictLoad');
+      }
+      function AddWordsToDictionary(){
+        hideBlock('DictManipulationButtons');
+        openBlock('AddWords');
+      }
+      function CancelLoad(){
+        hideBlock('DictLoad');
+        hideBlock('AddWords');
+        openBlock('DictManipulationButtons');
+        document.getElementById("DictArr").innerHTML = "";
+      }
+      function ContinueWithoutAuthorization(){
+        hideBlock('SignInBlock');
+        openBlock('wordCardsBlock');
+        document.getElementById("login").value = "";
+        document.getElementById("password").value = "";
+        document.getElementById("repPassword").value = "";
+      }
+      function ChangeDictionary(){
+         if(user == "Stranger"){
+          document.querySelector("input[value='Change current dictionary']").style.display="none";
+        }else{
+          document.querySelector("input[value='Change current dictionary']").style.display="inline-block";
+        }
+        hideBlock('wordCardsBlock');
+        openBlock('DictManipulation');
+      }
+      function CancelDictManipulation(){
+        hideBlock('DictManipulation');
+        openBlock('wordCardsBlock');        
+      }
+      function iAgreeCookie(){
+        hideBlock('cookieWarning');
+        document.cookie = "cookieAgree=true;"
+      }      
+      function ChangeUser(){
+        hideBlock('wordCardsBlock');
+        openBlock('SignInBlock');       
+        if(user == "Stranger"){
+          hideBlock('logoutButton');
+          openBlock('loginButton');       
+        }else{
+          hideBlock('loginButton');
+          openBlock('logoutButton');  
+        }
+      }    
+      function closeAlarm(){
+        hideBlock('waitingBox');
+      }
+      
+      function closeInfo(){
+        hideBlock('waitingBox');
+      }
+      
+    </script-->
+  </body>
 </html>
