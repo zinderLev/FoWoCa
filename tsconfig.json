@@ -9,6 +9,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*.ts"], // Компилировать все .ts файлы из src
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/server.ts", "src/serverTools.ts"], // Компилировать все .ts файлы из src
+  "exclude": ["node_modules"]
 }

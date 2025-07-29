@@ -1,7 +1,8 @@
 import Fastify from 'fastify';
 import path from 'path';
 import fastifyStatic from '@fastify/static';
-import { ensureUsersDirectoryExists, userFileExists, IPostErr, IPostData, postAnswers } from './scripts/serverTools'; // Импортируем функции и интерфейс
+import { IPostErr, IPostData } from './common';
+import { postAnswers, ensureUsersDirectoryExists } from './serverTools';
 
 const fastify = Fastify({
   logger: true // Включаем логирование
@@ -24,7 +25,6 @@ fastify.get('/', async (request, reply) => {
   return reply.sendFile('index.html');
 });
 
-// Маршрут для обработки POST-запроса регистрации пользователя
 fastify.post<{ Body: IApiStruct }>('/api', async (request, reply) => {
   try {
     const oPostReq = await postAnswers(request.body.command, request.body.data);

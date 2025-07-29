@@ -1,0 +1,16 @@
+// tsconfig.client.json
+{
+  "compilerOptions": {
+    "target": "ES2022", // Или ESNext, чтобы использовать современные возможности
+    "module": "ESNext", // <-- Важно! Компилируем в ES Modules
+    "outDir": "./public/scripts", // Компилируем в ту же папку dist
+    "rootDir": "./src", // Исходники в src
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["DOM", "ES2022"] // Указываем, что это код для браузера
+  },
+  "include": ["src/clientTools.ts", "src/layout.ts"], // Компилируем только клиентский файл
+  "exclude": []
+}

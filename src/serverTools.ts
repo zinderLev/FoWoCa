@@ -1,5 +1,7 @@
 import * as fs from 'fs/promises'; // Используем промисные версии fs
 import * as path from 'path';
+import * as bcrypt from 'bcrypt';
+import { IPostData, } from './common';
 
 // Определяем путь к каталогу пользователей относительно корня проекта
 const USERS_DIR = path.join(process.cwd(), 'users');
@@ -8,17 +10,6 @@ const USERS_DIR = path.join(process.cwd(), 'users');
 interface UserData {
   username: string;
   password: string; // В реальном приложении пароль нужно хешировать!
-}
-
-// Интерфейс для тела POST-запроса регистрации
-export interface IPostData {
-  sUser?: string;
-  sPassword?: string;
-}
-
-export interface IPostErr {
-  message: string;
-  cod: number;
 }
 
 
@@ -119,21 +110,109 @@ async function ExDictLoad(userData:IUserData, errSuff:string){
   }
 }
 
+const saltRounds = 10; // Рекомендуемое значение от 10 до 12 для bcrypt
+
+async function hashPassword(password: string): Promise<string> {
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    return hashedPassword; // Сохраните этот хеш в базе данных
+}
+
+async function verifyPassword(inputPassword: string, storedHash: string): Promise<boolean> {
+    const isMatch = await bcrypt.compare(inputPassword, storedHash);
+    return isMatch;
+}
+
+const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+function encodeBase64(bytes: number[]): string {
+    let output = '';
+
+    for (let i = 0; i < bytes.length; i += 3) {
+        const byte1 = bytes[i];
+        const byte2 = i + 1 < bytes.length ? bytes[i + 1] : 0;
+        const byte3 = i + 2 < bytes.length ? bytes[i + 2] : 0;
+
+        const enc1 = byte1 >> 2;
+        const enc2 = ((byte1 & 3) << 4) | (byte2 >> 4);
+        const enc3 = ((byte2 & 15) << 2) | (byte3 >> 6);
+        const enc4 = byte3 & 63;
+
+        if (i + 1 == bytes.length) {
+            output += chars.charAt(enc1) + chars.charAt(enc2) + '==';
+        } else if (i + 2 == bytes.length) {
+            output += chars.charAt(enc1) + chars.charAt(enc2) + chars.charAt(enc3) + '=';
+        } else {
+            output += chars.charAt(enc1) + chars.charAt(enc2) + chars.charAt(enc3) + chars.charAt(enc4);
+        }
+    }
+
+    return output;
+}
+
+function decodeBase64(base64: string): number[] {
+    const output: number[] = [];
+
+    base64 = base64.replaceAll('-', '+');
+    base64 = base64.replaceAll('_', '/');
+    base64 = base64.replaceAll(/[^A-Za-z0-9+/=]/g, '');
+
+    for (let i = 0; i < base64.length;) {
+        const enc1 = chars.indexOf(base64.charAt(i++));
+        const enc2 = chars.indexOf(base64.charAt(i++));
+        const enc3 = chars.indexOf(base64.charAt(i++));
+        const enc4 = chars.indexOf(base64.charAt(i++));
+
+        const byte1 = (enc1 << 2) | (enc2 >> 4);
+        const byte2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+        const byte3 = ((enc3 & 3) << 6) | enc4;
+
+        if(byte1 >= 0) {output.push(byte1);}
+
+        if (enc3 !== 64 && byte2 >= 0) {
+            output.push(byte2);
+        }
+        if (enc4 !== 64 && byte3 >= 0) {
+            output.push(byte3);
+        }
+    }
+    return output;
+}
+
 export async function postAnswers(command:string, userData:IPostData) {
   try{
     switch(command){
+      case  "relogin": {
+        console.log("Relogin: login=" + userData.sUser + ", token=" + userData.token);
+        if(!userData.sUser || !userData.sPassword){
+          throw {message:"No user name or token", cod:-1}
+        }
+        let logCaseLw = userData.sUser.toLowerCase();
+
+        const sSaveUserInfo = await fs.readFile("users/" + logCaseLw + "/__@@@.##__", 'utf8');
+        const oSaveUserInfo = JSON.parse(sSaveUserInfo) as ISaveUserData;
+
+        if(!oSaveUserInfo.abc || !oSaveUserInfo.login){
+          throw {message:"Problem with user data file. Try to register with the same user ID and your dictionary will be available.", cod:-3}
+        }
+        if(oSaveUserInfo.abc !== userData.token || oSaveUserInfo.login !== userData.sUser){
+          throw {message:"Wrong user name or password", cod:-1}
+        }
+        return "";
+      }
       case  "newUser": {
         console.log("Sign Up: login=" + userData.sUser + ", password=" + userData.sPassword);
         if(!userData.sUser || !userData.sPassword){
           throw {message:"No user name or password", cod:-1}
         }
         let logCaseLw = userData.sUser.toLowerCase();
+
         fs.access("users/" + logCaseLw + "/__@@@.##__").then(()=>{
           throw {message:"User already exists", cod:-2}
         }). catch(()=>{
-          fs.mkdir("users/" + logCaseLw, { recursive: true}).then(()=>{
-            let userParam = JSON.stringify({"abc":userData.sPassword, "login":userData.sUser});          
+          fs.mkdir("users/" + logCaseLw, { recursive: true}).then(async ()=>{
+            const token = await hashPassword(userData.sPassword!)
+            let userParam = JSON.stringify({"abc":token, "login":userData.sUser});          
             fs.writeFile("users/" + logCaseLw + "/__@@@.##__", userParam, 'utf8');
+            return token;
           }).catch((err)=>{
             throw {message:JSON.stringify(err), cod:-3}
           })
@@ -153,10 +232,12 @@ export async function postAnswers(command:string, userData:IPostData) {
         if(!oSaveUserInfo.abc || !oSaveUserInfo.login){
           throw {message:"Problem with user data file. Try to register with the same user ID and your dictionary will be available.", cod:-3}
         }
-        if(oSaveUserInfo.abc !== userData.sPassword || oSaveUserInfo.login !== userData.sUser){
+
+        const bIsIdent = await verifyPassword(userData.sPassword, oSaveUserInfo.abc);
+        if(!bIsIdent || oSaveUserInfo.login !== userData.sUser){
           throw {message:"No user name or password", cod:-1}
         }
-        return "";
+        return oSaveUserInfo.abc;
       }
     /*case "loadDict":{
       let logCaseLw = userData.user.toLowerCase();

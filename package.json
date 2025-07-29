@@ -4,15 +4,19 @@
   "description": "FoWoCa - A simple user registration project with Fastify and TypeScript for Render.com",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "tsc --watch & node dist/server.js"
+    "build:server": "tsc --project tsconfig.json",
+    "build:client": "tsc --project tsconfig.client.json",
+    "build": "npm run build:server && npm run build:client && cp public/* scripts/",
+    "start": "node scripts/server.js",
+    "dev": "tsc --watch & node scripts/server.js"
   },
   "dependencies": {
-    "fastify": "^4.28.0",
-    "@fastify/static": "^6.12.0"
+    "@fastify/static": "^6.12.0",
+    "bcrypt": "^6.0.0",
+    "fastify": "^4.28.0"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/node": "^20.14.9",
     "typescript": "^5.5.3"
   },
