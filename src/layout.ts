@@ -1,4 +1,4 @@
-import { IPostData, IDict, } from './common';
+import { IApiStruct, IDict, } from './common';
 import { hideBlock, IsObject, SetSameObjFields, ApiRequest, openBlock, oLocaleData} from './clientTools';
 
 hideBlock('waitingBox');
@@ -25,12 +25,11 @@ let jsDict:IDict|null = null;
 async function StartWork() {
     if (oLocaleData.currUser && oLocaleData.currUser != "Stranger" && oLocaleData.token) {
         try{
-            const oData:IPostData = {sUser:oLocaleData.currUser, token:oLocaleData.token};
-            let str = JSON.stringify({ command: "relogin", data:oData});
-            const sDict = await ApiRequest(str);
+            const oData:IApiStruct = {command:"relogin", data:{sUser: oLocaleData.currUser, token:oLocaleData.token}}
+            const oAnswer = await ApiRequest(JSON.stringify(oData));
 
-            if(sDict){
-                jsDict = JSON.parse(sDict);
+            if(oAnswer && oAnswer.result && oAnswer.result.oDict){
+                jsDict = oAnswer.result.oDict;
             }
         } catch(err) {
 
@@ -40,4 +39,6 @@ async function StartWork() {
     }
 }
 
-StartWork();
+(async () => {
+    await StartWork();
+})();

@@ -4,13 +4,10 @@
     <title>Foreign word cards</title>
     <link id="cssLink" rel="stylesheet" href="/style.css" />
     <meta charset="utf-8" />
-    <!--script type="text/javascript" src="FWCfunc.js"></script>
-    <script type="text/javascript" src="myTools.js"></script-->
-    <script type="text/javascript" src="scripts/clientTools.js"></script>
   </head>
   <body>
     <div id="getAttr" style="display: none"></div>
-    <div  onclick="ChangeUser()" id="ChangeUser">
+    <div id="ChangeUser">
         <label id="user">User: Stranger</label>
     </div>
     <div class="alarmWindow" id="waitingBox"></div>
@@ -19,90 +16,90 @@
         <input class="signing" type="email" id="login" /><br />
         <label>Password</label><br />
         <input class="signing" type="password" id="password" />
-        <span class="signing" id="showTextPassword" onclick="showText('password', this.id)">&#128374;</span>
+        <span class="signing" id="showTextPassword">&#128374;</span>
         <br>
         <div id="repPassDiv" style="display: none">
             <label>Repeat password</label><br />
             <input class="signing" type="password" id="repPassword" />
-            <span class="signing" id="showTextRepPass" onclick="showText('repPassword', this.id)"
+            <span class="signing" id="showTextRepPass"
             >&#128374;</span><br />
         </div>
         <br />
         <div id="loginButton">
-            <input class="button1" type="button" value="Sign in" onclick="signIn()" />
-            <input class="button1" type="button" value="Sign up" onclick="signUp()" title="Registration new user"/>
-            <input class="button1" type="button" value="Cancel" onclick="ContinueWithoutAuthorization()"/>
+            <input class="button1" type="button" value="Sign in" id="signIn" />
+            <input class="button1" type="button" value="Sign up" title="Registration new user" id="signUp"/>
+            <input class="button1" type="button" value="Cancel" id="ContinueWithoutAuthorization"/>
         </div>
         <div id="logoutButton" style="display:none">
             <!--input class="button1" type="button" value="Reset password" />< onclick="signUp()" /-->
-            <input class="button1" type="button" value="Logout" onclick="logout()" />
-            <input class="button1" type="button" value="Change user" onclick="signIn()" />
-            <input class="button1" type="button" value="Sign up" onclick="signUp()" title="Registration new user"/>
-            <input class="button1" type="button" value="Cancel" onclick="ContinueWithoutAuthorization()"/>
+            <input class="button1" type="button" value="Logout" id="logout" />
+            <input class="button1" type="button" value="Change user" id="signIn_1" />
+            <input class="button1" type="button" value="Sign up" title="Registration new user" id="signUp_1"/>
+            <input class="button1" type="button" value="Cancel" id="ContinueWithoutAuthorization_1"/>
         </div>
     </div>
     <div id="wordCardsBlock" style="display:none">
         <div id="fromServer" style="display: none">{{ greeting }}</div>
         <div class="buttonBlok2">      
-            <div class="radio" onclick="setRnd()">
-            <div id="Rnd" class="button2" onclick="setRnd()"></div>
+            <div class="radio" id="setRnd">
+            <div id="Rnd" class="button2"></div>
             <div class="radioText">Random</div>
             </div>
-            <div class="radio" onclick="setEn()">
-            <div id="En" class="button2" onclick="setEn()"></div>
+            <div class="radio" id="setEn">
+            <div id="En" class="button2"></div>
             <div class="radioText">Foreign</div>
             </div>
-            <div class="radio" onclick="setRu()">
-            <div id="Ru" class="button2" onclick="setRu()"></div>
+            <div class="radio" id="setRu">
+            <div id="Ru" class="button2"></div>
             <div class="radioText">Native</div>
             </div>
         </div>
         <div class="buttonBlok2">
-            <div class="radio" onclick="resetRem()">
-            <div id="All" class="button2" onclick="resetRem()"></div>
+            <div class="radio" id="resetRem">
+            <div id="All" class="button2"></div>
             <div class="radioText">All  words&nbsp;&nbsp;</div>
             </div>
-            <div class="radio" onclick="setRem()">
-            <div id="Unrem" class="button2" type="button" value=""  onclick="setRem()"></div>
+            <div class="radio" id="setRem">
+            <div id="Unrem" class="button2" type="button" value="" ></div>
             <div class="radioText">Unlearned&nbsp;&nbsp;</div>
             </div>
         </div>
         <div id="out" class="words">&nbsp;</div>
         <div id="ans" class="info">&nbsp;</div>
         <div class="buttonBlok">
-            <input type="button" class="button1" value="&#9664;&nbsp;Prev&nbsp;&nbsp;" onclick="outputPrevWord()" />
-            <input type="button" class="button1" value="&nbsp;&nbsp;Rand&nbsp;&nbsp;" onclick="outputRandWord()" />
-            <input type="button" class="button1" value="&nbsp;&nbsp;Next&nbsp;&#9654;" onclick="outputNextWord()" />
+            <input type="button" class="button1" value="&#9664;&nbsp;Prev&nbsp;&nbsp;" id="outputPrevWord" />
+            <input type="button" class="button1" value="&nbsp;&nbsp;Rand&nbsp;&nbsp;" id="outputRandWord" />
+            <input type="button" class="button1" value="&nbsp;&nbsp;Next&nbsp;&#9654;" id="outputNextWord" />
         </div>
         <hr>
         <div class="buttonBlok">
-            <input type="button" class="button1" value="Memorized"  onclick="wordRemembered()" />
-            <input type="button" class="button1" value="Forgot"     onclick="wordForgot()" />
+            <input type="button" class="button1" value="Memorized"  id="wordRemembered" />
+            <input type="button" class="button1" value="Forgot"     id="wordForgot" />
         </div>
         <hr>
         <div class="buttonBlok">
-            <input type="button" class="button1" value="Variants" onclick="outputVariants()" />
-            <input type="button" class="button1" value="By characters" onclick="outputWordByChar()"/>
-            <input type="button" class="button1" value="Right answer"  onclick="outputRightAnswer()"/>
+            <input type="button" class="button1" value="Variants" id="outputVariants" />
+            <input type="button" class="button1" value="By characters" id="outputWordByChar"/>
+            <input type="button" class="button1" value="Right answer"  id="outputRightAnswer"/>
         </div>
         <hr>
         <div class="buttonBlok">
-            <input type="button" class="button1" value="Load/Change dictionary"  onclick="ChangeDictionary()"/>
+            <input type="button" class="button1" value="Load/Change dictionary"  id="ChangeDictionary"/>
         </div>
     </div>
     <!--br /-->
     <div id="DictManipulation" style="display:none">
         <div class="buttonBlok" id="DictManipulationButtons">
-            <input class="button1" type="button" value="Load new dictionary" onclick="LoadNewDictionary()"/>
-            <input class="button1" type="button" value="Change current dictionary" onclick="ChangeCurrDict()"/>
+            <input class="button1" type="button" value="Load new dictionary" id="LoadNewDictionary"/>
+            <input class="button1" type="button" value="Change current dictionary" id="ChangeCurrDict"/>
             <!--input class="button1" type="button" value="Add words to dictionary" onclick="AddWordsToDictionary()"/-->
-            <input class="button1" type="button" value="Cancel" onclick="CancelDictManipulation()" />        
+            <input class="button1" type="button" value="Cancel" id="CancelDictManipulation" />        
         </div>
         <div id="DictLoad" style="display:none">
             <div>
             <label>Dictionary name:&nbsp;</label><input class="signing" type="text" id="dictName"/>
-            <input class="button1" type="button" value="Load dictionary" onclick="BeforeLoadDict()"/>
-            <input class="button1" type="button" value="Cancel" onclick="CancelLoad()" />        
+            <input class="button1" type="button" value="Load dictionary" id="LoadDict"/>
+            <input class="button1" type="button" value="Cancel" id="CancelLoad" />        
             </div>
             <textarea id="dictBody" style="width: 100%" rows="20"></textarea>
             <!-- cols="60" rows="20" style="float: right;"-->
@@ -114,8 +111,8 @@
             <div style="border:solid;">
                 abc
             </div>
-            <input class="button1" type="button" value="Load words" onclick="opebBlock('DictLoad')"/>
-            <input class="button1" type="button" value="Cancel" onclick="CancelLoad()" />        
+            <input class="button1" type="button" value="Load words" id="opebBlock"/>
+            <input class="button1" type="button" value="Cancel" id="CancelLoad_1" />        
             </div>
             <textarea id="dictionary" style="width: 100%" rows="20"></textarea>
             <!-- cols="60" rows="20" style="float: right;"-->
@@ -123,11 +120,11 @@
     </div>
 
     <div id="cookieWarning" class="cookie_notice">
-        This site uses cookies to make your next input easier<br/>
-        <input class="button1" type="button" value="I agree" onclick="iAgreeCookie()"
-        style="box-shadow:5px 5px 6px rgba(0, 0, 0, 5);"/>
+        This site uses cookies to make your next input easier
+        <br>
+        <button class="button1" id="iAgreeCookie">I agree</button>
     </div>
     <!------------------------------------------------------------>
-    <script type="text/javascript" src="scripts/layout.js"></script>
+    <script type="module" src="./bundle.js"></script>
   </body>
 </html>

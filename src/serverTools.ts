@@ -1,7 +1,12 @@
 import * as fs from 'fs/promises'; // Используем промисные версии fs
 import * as path from 'path';
 import * as bcrypt from 'bcrypt';
-import { IPostData, } from './common';
+import { ServerResponse, IApiStruct} from './common';
+import Fastify from 'fastify';
+
+const fastify = Fastify({
+  logger: true // Включаем логирование
+});
 
 // Определяем путь к каталогу пользователей относительно корня проекта
 const USERS_DIR = path.join(process.cwd(), 'users');
@@ -177,9 +182,12 @@ function decodeBase64(base64: string): number[] {
     return output;
 }
 
-export async function postAnswers(command:string, userData:IPostData) {
+export async function postAnswers(oPostData:IApiStruct): Promise<ServerResponse> {
   try{
-    switch(command){
+    const userData = oPostData.data;
+    ///console.log("/api " + oPostData.command);
+    fastify.log.info("oPostData.command="+ oPostData.command);
+    switch(oPostData.command){
       case  "relogin": {
         console.log("Relogin: login=" + userData.sUser + ", token=" + userData.token);
         if(!userData.sUser || !userData.sPassword){
@@ -196,7 +204,7 @@ export async function postAnswers(command:string, userData:IPostData) {
         if(oSaveUserInfo.abc !== userData.token || oSaveUserInfo.login !== userData.sUser){
           throw {message:"Wrong user name or password", cod:-1}
         }
-        return "";
+        return {result:{}};
       }
       case  "newUser": {
         console.log("Sign Up: login=" + userData.sUser + ", password=" + userData.sPassword);
@@ -212,12 +220,12 @@ export async function postAnswers(command:string, userData:IPostData) {
             const token = await hashPassword(userData.sPassword!)
             let userParam = JSON.stringify({"abc":token, "login":userData.sUser});          
             fs.writeFile("users/" + logCaseLw + "/__@@@.##__", userParam, 'utf8');
-            return token;
+            return {result:{"token":token}};
           }).catch((err)=>{
             throw {message:JSON.stringify(err), cod:-3}
           })
         })
-        return "";
+        return {result:{}};
       }
       case "signIn": {
         console.log("Sign In: login=" + userData.sUser + ", password=" + userData.sPassword);
@@ -237,7 +245,7 @@ export async function postAnswers(command:string, userData:IPostData) {
         if(!bIsIdent || oSaveUserInfo.login !== userData.sUser){
           throw {message:"No user name or password", cod:-1}
         }
-        return oSaveUserInfo.abc;
+        return {result:{token:oSaveUserInfo.abc}};
       }
     /*case "loadDict":{
       let logCaseLw = userData.user.toLowerCase();
@@ -329,7 +337,7 @@ export async function postAnswers(command:string, userData:IPostData) {
     } break;
       */
       default:
-        throw {message:"Unknown command " + command, cod:-5};
+        throw {message:"Unknown command " + oPostData.command, cod:-5};
     }
   } catch(err) {
     throw err;

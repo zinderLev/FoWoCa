@@ -164,3 +164,6 @@ hr {
     box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.5);
     margin: 0px 40px 15px 40px
 }
+#iAgreeCookie{
+  box-shadow:5px 5px 6px rgba(0, 0, 0, 5);
+}

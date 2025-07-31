@@ -14,12 +14,13 @@ export interface IPostErr {
 }
 
 export interface ServerResponse {
-    resalt?: string;
+    result?: {token?:string, oDict?:IDict};
     error?: string;
+
 }
 
 export interface IApiStruct{
-  command:string;
+  command:"relogin"|"newUser"|"signIn"|"dictListRequest"|"dictRequest"|"dictLoad"|"logout";
   data:IPostData;
 }
 
@@ -29,6 +30,6 @@ export interface IWordCart{
     rem:boolean;
 }
 export interface IDict{
-    name:string;
-    wc:IWordCart[];
+    dictName:string;
+    words:IWordCart[];
 }

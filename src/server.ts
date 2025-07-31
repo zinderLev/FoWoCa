@@ -1,7 +1,7 @@
 import Fastify from 'fastify';
 import path from 'path';
 import fastifyStatic from '@fastify/static';
-import { IPostErr, IPostData } from './common';
+import { IPostErr, IApiStruct} from './common';
 import { postAnswers, ensureUsersDirectoryExists } from './serverTools';
 
 const fastify = Fastify({
@@ -14,20 +14,17 @@ fastify.register(fastifyStatic, {
   prefix: '/', // Файлы из public/ будут доступны по корневому URL
 });
 
-interface IApiStruct{
-  command:string;
-  data:IPostData;
-}
-
 // Маршрут для отдачи главной HTML-страницы
 fastify.get('/', async (request, reply) => {
   // Отдаем index.html из папки public
   return reply.sendFile('index.html');
 });
 
-fastify.post<{ Body: IApiStruct }>('/api', async (request, reply) => {
+fastify.post<{ Body: string }>('/api', async (request, reply) => {
   try {
-    const oPostReq = await postAnswers(request.body.command, request.body.data);
+    const oApiStruct = JSON.parse(request.body) as IApiStruct;
+    fastify.log.info("/api:" + oApiStruct.command);
+    const oPostReq = await postAnswers({command:oApiStruct.command, data:oApiStruct.data});
     reply.status(200).send(oPostReq);
   } catch (error) {
     const oErr = error as IPostErr;
