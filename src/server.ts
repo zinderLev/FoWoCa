@@ -24,12 +24,17 @@ fastify.post<{ Body: string }>('/api', async (request, reply) => {
   try {
     const oApiStruct = JSON.parse(request.body) as IApiStruct;
     fastify.log.info("/api:" + oApiStruct.command);
+
     const oPostReq = await postAnswers({command:oApiStruct.command, data:oApiStruct.data});
-    reply.status(200).send(oPostReq);
+    const sPostReq = JSON.stringify(oPostReq);
+
+    reply.status(200).send(sPostReq);
+    
+    fastify.log.info("/sPostReq: " + sPostReq);
   } catch (error) {
     const oErr = error as IPostErr;
     fastify.log.error(oErr.message, oErr.cod);
-    reply.status(200).send({ error: oErr.message });
+    reply.status(200).send(JSON.stringify({ error: oErr.message }));
   }
 });
 

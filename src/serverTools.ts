@@ -4,9 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { ServerResponse, IApiStruct} from './common';
 import Fastify from 'fastify';
 
-const fastify = Fastify({
-  logger: true // Включаем логирование
-});
+const fastify = Fastify({logger: true});
 
 // Определяем путь к каталогу пользователей относительно корня проекта
 const USERS_DIR = path.join(process.cwd(), 'users');
@@ -18,9 +16,7 @@ interface UserData {
 }
 
 
-/**
- * Проверяет существование каталога пользователей и создает его, если он не существует.
- */
+// Проверяет существование каталога пользователей и создает его, если он не существует.
 export async function ensureUsersDirectoryExists(){
   try {
     await fs.mkdir(USERS_DIR, { recursive: true });
@@ -127,69 +123,13 @@ async function verifyPassword(inputPassword: string, storedHash: string): Promis
     return isMatch;
 }
 
-const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-function encodeBase64(bytes: number[]): string {
-    let output = '';
-
-    for (let i = 0; i < bytes.length; i += 3) {
-        const byte1 = bytes[i];
-        const byte2 = i + 1 < bytes.length ? bytes[i + 1] : 0;
-        const byte3 = i + 2 < bytes.length ? bytes[i + 2] : 0;
-
-        const enc1 = byte1 >> 2;
-        const enc2 = ((byte1 & 3) << 4) | (byte2 >> 4);
-        const enc3 = ((byte2 & 15) << 2) | (byte3 >> 6);
-        const enc4 = byte3 & 63;
-
-        if (i + 1 == bytes.length) {
-            output += chars.charAt(enc1) + chars.charAt(enc2) + '==';
-        } else if (i + 2 == bytes.length) {
-            output += chars.charAt(enc1) + chars.charAt(enc2) + chars.charAt(enc3) + '=';
-        } else {
-            output += chars.charAt(enc1) + chars.charAt(enc2) + chars.charAt(enc3) + chars.charAt(enc4);
-        }
-    }
-
-    return output;
-}
-
-function decodeBase64(base64: string): number[] {
-    const output: number[] = [];
-
-    base64 = base64.replaceAll('-', '+');
-    base64 = base64.replaceAll('_', '/');
-    base64 = base64.replaceAll(/[^A-Za-z0-9+/=]/g, '');
-
-    for (let i = 0; i < base64.length;) {
-        const enc1 = chars.indexOf(base64.charAt(i++));
-        const enc2 = chars.indexOf(base64.charAt(i++));
-        const enc3 = chars.indexOf(base64.charAt(i++));
-        const enc4 = chars.indexOf(base64.charAt(i++));
-
-        const byte1 = (enc1 << 2) | (enc2 >> 4);
-        const byte2 = ((enc2 & 15) << 4) | (enc3 >> 2);
-        const byte3 = ((enc3 & 3) << 6) | enc4;
-
-        if(byte1 >= 0) {output.push(byte1);}
-
-        if (enc3 !== 64 && byte2 >= 0) {
-            output.push(byte2);
-        }
-        if (enc4 !== 64 && byte3 >= 0) {
-            output.push(byte3);
-        }
-    }
-    return output;
-}
-
 export async function postAnswers(oPostData:IApiStruct): Promise<ServerResponse> {
   try{
     const userData = oPostData.data;
-    ///console.log("/api " + oPostData.command);
     fastify.log.info("oPostData.command="+ oPostData.command);
     switch(oPostData.command){
       case  "relogin": {
-        console.log("Relogin: login=" + userData.sUser + ", token=" + userData.token);
+        fastify.log.info("Relogin: login=" + userData.sUser + ", token=" + userData.token);
         if(!userData.sUser || !userData.sPassword){
           throw {message:"No user name or token", cod:-1}
         }
@@ -207,34 +147,41 @@ export async function postAnswers(oPostData:IApiStruct): Promise<ServerResponse>
         return {result:{}};
       }
       case  "newUser": {
-        console.log("Sign Up: login=" + userData.sUser + ", password=" + userData.sPassword);
+        fastify.log.info("New User: login=" + userData.sUser + ", password=" + userData.sPassword);
         if(!userData.sUser || !userData.sPassword){
           throw {message:"No user name or password", cod:-1}
         }
-        let logCaseLw = userData.sUser.toLowerCase();
+        const logCaseLw = userData.sUser.toLowerCase();
 
-        fs.access("users/" + logCaseLw + "/__@@@.##__").then(()=>{
+        let bIsAccess = false;
+        try{
+          await fs.access("users/" + logCaseLw + "/__@@@.##__");
+          bIsAccess = true;
+        }catch{}
+        if(bIsAccess){
           throw {message:"User already exists", cod:-2}
-        }). catch(()=>{
-          fs.mkdir("users/" + logCaseLw, { recursive: true}).then(async ()=>{
-            const token = await hashPassword(userData.sPassword!)
-            let userParam = JSON.stringify({"abc":token, "login":userData.sUser});          
-            fs.writeFile("users/" + logCaseLw + "/__@@@.##__", userParam, 'utf8');
-            return {result:{"token":token}};
-          }).catch((err)=>{
-            throw {message:JSON.stringify(err), cod:-3}
-          })
-        })
-        return {result:{}};
+        }
+
+        try{
+          await fs.mkdir("users/" + logCaseLw, { recursive: true});
+          const sToken = await hashPassword(userData.sPassword!);
+          const userParam = JSON.stringify({"abc":sToken, "login":userData.sUser});   
+          await fs.writeFile("users/" + logCaseLw + "/__@@@.##__", userParam, 'utf8');
+          return {result:{"token":sToken}};
+        } catch(err){
+          throw {message:JSON.stringify(err), cod:-3}
+        }
       }
       case "signIn": {
-        console.log("Sign In: login=" + userData.sUser + ", password=" + userData.sPassword);
+        fastify.log.info("Sign In: login=" + userData.sUser + ", password=" + userData.sPassword);
         if(!userData.sUser || !userData.sPassword){
           throw {message:"No user name or password", cod:-1}
         }
         let logCaseLw = userData.sUser.toLowerCase();
 
         const sSaveUserInfo = await fs.readFile("users/" + logCaseLw + "/__@@@.##__", 'utf8');
+        fastify.log.info("sSaveUserInfo: " + sSaveUserInfo);
+
         const oSaveUserInfo = JSON.parse(sSaveUserInfo) as ISaveUserData;
 
         if(!oSaveUserInfo.abc || !oSaveUserInfo.login){

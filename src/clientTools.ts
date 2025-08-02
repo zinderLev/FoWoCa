@@ -71,6 +71,7 @@ async function signIn(){
 }
 
 async function signUp(){
+    openBlock('repPassDiv');
     try{
         const login = (document.getElementById("login") as HTMLInputElement).value;
         const password = (document.getElementById("password") as HTMLInputElement).value;
@@ -85,17 +86,15 @@ async function signUp(){
             return
         }
 
-        const oData:IApiStruct = {command:"signIn", data:{sUser: login, sPassword: password}}
+        const oData:IApiStruct = {command:"newUser", data:{sUser: login, sPassword: password}}
         const oAnswer = await ApiRequest(JSON.stringify(oData));
         if(oAnswer && oAnswer.result && oAnswer.result.token){
             oLocaleData.token = oAnswer.result.token;
+            oLocaleData.currUser = login;
+            localStorage.setItem("oLocaleData", JSON.stringify(oLocaleData));
         } else {
-            oLocaleData.token = "";
             throw "Wrong login or password"
         }
-
-        oLocaleData.currUser = login;
-        localStorage.setItem("oLocaleData", JSON.stringify(oLocaleData));
 
         alert("Saccess!");
     }catch (err:any){
